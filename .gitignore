@@ -4,4 +4,4 @@
 *.tfstate.backup
 *.tfstate
 *id_rsa*
-
+*.pem
