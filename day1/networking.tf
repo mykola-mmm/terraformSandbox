@@ -97,7 +97,29 @@ resource "aws_security_group" "backend_private_sg" {
 
   vpc_id = aws_vpc.my_vpc.id
 
-  # Add ingress and egress rules specific to the backend private subnet
+  ingress {
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ssh_bastion_sg.id]
+  }
+  ingress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "icmp"
+    security_groups = [aws_security_group.ssh_bastion_sg.id]
+  }
+
+
+  egress {
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ssh_bastion_sg.id]
+  }
+
+
+  # Add egress rules specific to the backend private subnet
 }
 
 resource "aws_security_group" "db_private_sg" {
