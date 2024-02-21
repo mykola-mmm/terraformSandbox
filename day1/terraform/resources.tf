@@ -11,7 +11,7 @@ resource "aws_instance" "bastion_server" {
 
 
   provisioner "file" {
-    source = local_file.backend_ssh_filekey.filename
+    source      = local_file.backend_ssh_filekey.filename
     destination = "/home/ec2-user/.ssh/"
     connection {
       type        = "ssh"
@@ -20,11 +20,6 @@ resource "aws_instance" "bastion_server" {
       host        = self.public_ip
     }
   }
-
-  # provisioner "local-exec" {
-  #   command = "cp ${local_file.bastion_ssh_filekey.filename} ~/.ssh/test_provisioner.pem"
-  
-  # }
 }
 
 resource "aws_instance" "backend_instance" {
