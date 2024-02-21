@@ -65,17 +65,36 @@ data "aws_iam_policy_document" "host_bucket_allow_public_access" {
 }
 
 resource "aws_s3_bucket_policy" "host_bucket_policy" {
-  bucket = aws_s3_bucket.host_bucket.id
-  policy = data.aws_iam_policy_document.host_bucket_allow_public_access.json
-  depends_on = [ aws_s3_bucket_acl.host_bucket_acl ]
+  bucket     = aws_s3_bucket.host_bucket.id
+  policy     = data.aws_iam_policy_document.host_bucket_allow_public_access.json
+  depends_on = [aws_s3_bucket_acl.host_bucket_acl]
 }
 
 resource "aws_s3_bucket_website_configuration" "host_bucket_website_configuration" {
-    bucket = aws_s3_bucket.host_bucket.id
-    index_document {
-        suffix = "index.html"
-    }
-    error_document {
-        key = "error.html"
-    }
+  bucket = aws_s3_bucket.host_bucket.id
+  index_document {
+    suffix = "index.html"
+  }
+  error_document {
+    key = "error.html"
+  }
+}
+
+module "template_files" {
+  source = "hashicorp/dir/template"
+
+  base_dir = "${path.module}/aws-s3-static-website-sample/Website"
+}
+
+resource "aws_s3_object" "host_bucket_files" {
+  bucket   = aws_s3_bucket.host_bucket.id
+  for_each = module.template_files.files
+
+  key          = each.key
+  content_type = each.value.content_type
+
+  source  = each.value.source_path
+  content = each.value.content
+
+  etag = each.value.digests.md5
 }
