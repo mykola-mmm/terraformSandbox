@@ -1,0 +1,9 @@
+---
+- name: Destroy AWS Infrastructure with Terraform
+  hosts: localhost
+  tasks:
+    - name: Destroy Terraform Infrastructure
+      community.general.terraform:
+        project_path: "../terraform"
+        state: absent
+        force_init: true

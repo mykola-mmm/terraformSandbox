@@ -1,0 +1,9 @@
+---
+- name: Create AWS Infrastructure with Terraform
+  hosts: localhost
+  tasks:
+    - name: Initialize Terraform
+      shell: terraform init --upgrade
+      args:
+        chdir: ../terraform/
+      register: init

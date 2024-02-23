@@ -1,0 +1,9 @@
+---
+- name: Create AWS Infrastructure with Terraform
+  hosts: localhost
+  tasks:
+    - name: Apply Terraform Configuration
+      community.general.terraform:
+        project_path: "../terraform"
+        state: present
+      when: init is changed
