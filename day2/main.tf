@@ -100,6 +100,11 @@ resource "null_resource" "download_repo" {
 
   provisioner "local-exec" {
     interpreter = ["bash", "-c"]
+    command     = "rm -rf ./src"
+  }
+
+  provisioner "local-exec" {
+    interpreter = ["bash", "-c"]
     command     = "git clone ${var.github_repo_url} ./src"
   }
   provisioner "local-exec" {
