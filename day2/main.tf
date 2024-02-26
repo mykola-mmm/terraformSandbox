@@ -100,38 +100,29 @@ resource "null_resource" "download_repo" {
 
   provisioner "local-exec" {
     interpreter = ["bash", "-c"]
-    command     = "rm -rf ./src"
-  }
-
-  provisioner "local-exec" {
-    interpreter = ["bash", "-c"]
     command     = "git clone ${var.github_repo_url} ./src"
   }
   provisioner "local-exec" {
     interpreter = ["bash", "-c"]
-    command     = "cp -rf ./src/Website ./src_tmp"
+    command     = "cp -rf ./src/Website ./website"
   }
 
   provisioner "local-exec" {
     interpreter = ["bash", "-c"]
     command     = "rm -rf ./src"
   }
-
-  provisioner "local-exec" {
-    interpreter = ["bash", "-c"]
-    command     = "mv ./src_tmp/ ./src"
-  }
 }
 
 module "template_files" {
+  depends_on = [ null_resource.download_repo ]
   source = "hashicorp/dir/template"
 
-  base_dir = "${path.module}/src"
+  base_dir = "${path.module}/website"
 }
 
 
 resource "aws_s3_object" "host_bucket_files" {
-  depends_on = [ null_resource.download_repo ]
+  depends_on = [ module.template_files ]
 
   bucket   = aws_s3_bucket.host_bucket.id
   for_each = module.template_files.files
