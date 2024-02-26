@@ -80,30 +80,6 @@ resource "aws_s3_bucket_website_configuration" "host_bucket_website_configuratio
   }
 }
 
-# module "template_files" {
-#   source = "hashicorp/dir/template"
-
-#   base_dir = "${path.module}/aws-s3-static-website-sample/Website"
-# }
-
-# resource "aws_s3_object" "host_bucket_files" {
-#   bucket   = aws_s3_bucket.host_bucket.id
-#   for_each = module.template_files.files
-
-#   key          = each.key
-#   content_type = each.value.content_type
-
-#   source  = each.value.source_path
-#   content = each.value.content
-
-#   etag = each.value.digests.md5
-# }
-
-# data "external" "latest_commit_sha" {
-#     program = ["curl", "-s", var.github_master_branch_url, "|", "jq", "-r", ".sha"]
-#   # program = ["curl", "-s", var.github_master_branch_url, "|", "jq", "-r", ".sha"]
-# }
-
 resource "null_resource" "latest_commit_sha" {
   triggers = { always_run = "${timestamp()}" }
   provisioner "local-exec" {
@@ -126,4 +102,40 @@ resource "null_resource" "download_repo" {
     interpreter = ["bash", "-c"]
     command     = "git clone ${var.github_repo_url} ./src"
   }
+  provisioner "local-exec" {
+    interpreter = ["bash", "-c"]
+    command     = "cp -rf ./src/Website ./src_tmp"
+  }
+
+  provisioner "local-exec" {
+    interpreter = ["bash", "-c"]
+    command     = "rm -rf ./src"
+  }
+
+  provisioner "local-exec" {
+    interpreter = ["bash", "-c"]
+    command     = "mv ./src_tmp/ ./src"
+  }
+}
+
+module "template_files" {
+  source = "hashicorp/dir/template"
+
+  base_dir = "${path.module}/src"
+}
+
+
+resource "aws_s3_object" "host_bucket_files" {
+  depends_on = [ null_resource.download_repo ]
+
+  bucket   = aws_s3_bucket.host_bucket.id
+  for_each = module.template_files.files
+
+  key          = each.key
+  content_type = each.value.content_type
+
+  source  = each.value.source_path
+  content = each.value.content
+
+  etag = each.value.digests.md5
 }
