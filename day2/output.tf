@@ -7,3 +7,8 @@ output "latest_commit_sha" {
   description = "value of the latest commit sha"
   value       = data.local_file.latest_commit_sha.content
 }
+
+output "cloudfront_distribution_url" {
+  description = "Url of the cloudfront distribution"
+  value       = aws_cloudfront_distribution.s3_distribution.domain_name	
+}
