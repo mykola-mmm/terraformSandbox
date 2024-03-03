@@ -4,7 +4,7 @@ output "bastion_public_ip" {
 
 output "backend_private_ip" {
   value = aws_instance.backend_instance.private_ip
-}	
+}
 
 output "username" {
   value = var.username

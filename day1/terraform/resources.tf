@@ -9,17 +9,26 @@ resource "aws_instance" "bastion_server" {
     Name = "bastion-server"
   }
 
-
+  connection {
+    type        = "ssh"
+    user        = var.username
+    private_key = tls_private_key.rsa-4096.private_key_pem
+    host        = self.public_ip
+  }
   provisioner "file" {
     source      = local_file.backend_ssh_filekey.filename
-    destination = "/home/ec2-user/.ssh/"
-    connection {
-      type        = "ssh"
-      user        = var.username
-      private_key = tls_private_key.rsa-4096.private_key_pem
-      host        = self.public_ip
-    }
+    destination = "/home/ec2-user/.ssh/${local_file.backend_ssh_filekey.filename}"
   }
+
+  provisioner "file" {
+    source      = "${path.module}/config"
+    destination = "/home/ec2-user/.ssh/config"
+  }
+  provisioner "remote-exec" {
+    inline = ["chmod 400 /home/ec2-user/.ssh/${local_file.backend_ssh_filekey.filename}"]
+  }
+
+  depends_on = [local_file.backend_ssh_filekey, local_file.bastion_ssh_config]
 }
 
 resource "aws_instance" "backend_instance" {

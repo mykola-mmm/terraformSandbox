@@ -112,10 +112,11 @@ resource "aws_security_group" "backend_private_sg" {
 
 
   egress {
-    from_port       = 22
-    to_port         = 22
-    protocol        = "tcp"
-    security_groups = [aws_security_group.ssh_bastion_sg.id]
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    # security_groups = [aws_security_group.ssh_bastion_sg.id]
   }
 
 
@@ -151,23 +152,40 @@ resource "aws_route_table" "my_vpc_route_table" {
   }
 }
 
+resource "aws_route_table" "private_subnet_route_table" {
+  vpc_id = aws_vpc.my_vpc.id
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.nat_gw.id
+  }
+}
+
 resource "aws_route_table_association" "dmz_public_subnet_association" {
   subnet_id      = aws_subnet.dmz_public_subnet.id
   route_table_id = aws_route_table.my_vpc_route_table.id
 }
 
 
-resource "aws_route_table_association" "frontend_private_subnet_association" {
-  subnet_id      = aws_subnet.frontend_private_subnet.id
-  route_table_id = aws_route_table.my_vpc_route_table.id
-}
+# resource "aws_route_table_association" "frontend_private_subnet_association" {
+#   subnet_id      = aws_subnet.frontend_private_subnet.id
+#   route_table_id = aws_route_table.my_vpc_route_table.id
+# }
 
 resource "aws_route_table_association" "backend_private_subnet_association" {
-  subnet_id      = aws_subnet.backend_private_subnet.id
-  route_table_id = aws_route_table.my_vpc_route_table.id
+  subnet_id = aws_subnet.backend_private_subnet.id
+  route_table_id = aws_route_table.private_subnet_route_table.id
 }
 
-resource "aws_route_table_association" "db_private_subnet_association" {
-  subnet_id      = aws_subnet.db_private_subnet.id
-  route_table_id = aws_route_table.my_vpc_route_table.id
+# resource "aws_route_table_association" "db_private_subnet_association" {
+#   subnet_id      = aws_subnet.db_private_subnet.id
+#   route_table_id = aws_route_table.my_vpc_route_table.id
+# }
+
+resource "aws_eip" "nat" {
+  domain = "vpc"
+}
+
+resource "aws_nat_gateway" "nat_gw" {
+  allocation_id = aws_eip.nat.id
+  subnet_id  = aws_subnet.dmz_public_subnet.id
 }
